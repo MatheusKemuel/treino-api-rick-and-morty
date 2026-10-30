@@ -1,13 +1,14 @@
-const characterId = document.getElementById("characterId")
-const btnGo = document.getElementById("btn-go")
-const content = document.getElementById("content")
-const image = document.getElementById("img")
+const characterId = document.getElementById("characterId");
+const btnGo = document.getElementById("btn-go");
+const content = document.getElementById("content");
+const image = document.getElementById("img");
+const conteinerResult = document.getElementById('result-style');
+const btnReset = document.getElementById('btn-reset')
 
 const fetchApi = (value) => {
     const result = fetch(`https://rickandmortyapi.com/api/character/${value}`)
         .then((res) => res.json())
         .then((data) => {
-            console.log(data);
             return data;
         })
     return result
@@ -16,19 +17,43 @@ const fetchApi = (value) => {
 const keys = ['name', 'status', 'species', 'gender', 'origin', 'episode'];
 
 const buildResult = (result) => {
-    const newObject = {};
-    keys.map((key) => document.getElementById(key)).map((elem) => {
-        elem.checked && (newObject[elem.name] = result[elem.name]);
+    return keys.map((key) => document.getElementById(key)).map((elem) => {
+        if (elem.checked === true && (Array.isArray(result[elem.name])) === true) {
+            const arrayResult = result[elem.name].join('\r\n');
+            console.log(arrayResult)
+            const newElem = document.createElement("p");
+            newElem.innerHTML = `${elem.name} : ${arrayResult}`;
+            content.appendChild(newElem);
+        } else if (elem.checked === true && (elem.name === 'origin')) {
+            const newElem = document.createElement("p");
+            newElem.innerHTML = `${elem.name} : ${result[elem.name].name}`;
+            content.appendChild(newElem);
+        } else if (elem.checked === true && typeof (result[elem.name]) !== 'object') {
+            const newElem = document.createElement("p");
+            newElem.innerHTML = `${elem.name} : ${result[elem.name]}`;
+            content.appendChild(newElem);
+        }
+
     });
-    return newObject;
 }
 
 btnGo.addEventListener('click', async (event) => {
     event.preventDefault();
-    const result = await fetchApi(characterId.value);
-    // content.textContent = JSON.stringify(result, undefined, 2);
 
-    content.textContent  = `${JSON.stringify(buildResult(result))}`;
-    console.log(buildResult(result));
-    image.src = `${result.image}`
-})
+    if (characterId.value === '') {
+        return content.innerHTML = 'É necessário fazer um filtro.';
+    }
+    const result = await fetchApi(characterId.value);
+    if (content.firstChild === null) {
+        conteinerResult.className = 'result-style';
+        image.src = `${result.image}`
+        buildResult(result);
+    } else {
+        content.innerHTML = ''
+        conteinerResult.className = 'result-style';
+        buildResult(result);
+        image.src = `${result.image}`
+    }
+});
+
+btnReset.addEventListener('click', () => location.reload());
